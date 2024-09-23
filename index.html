@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>读取和修改 JSONBin 数据</title>
+    <script>
+        const API_KEY = '$2a$10$rEId5bUDOPNeLaQGQFcVy.ioVLw1iAa5Y9KEbgSG3wyUTjW/qa4Rq';  // 替换为你的API密钥
+        const BIN_ID = '66f0d59dacd3cb34a88971ca';    // 替换为你的Bin ID
+
+        // 读取Bin数据
+        async function readLatestBin() {
+            const url = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': API_KEY,
+                        'X-Bin-Meta': 'false'  // 可选，控制是否返回元数据
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+                    return result;  // 返回读取到的数据
+                } else {
+                    const errorResult = await response.json();
+                    throw new Error(`错误: ${response.status}, 信息: ${errorResult.message}`);
+                }
+            } catch (error) {
+                document.getElementById('result').innerText = '读取Bin时出错: ' + error.message;
+            }
+        }
+
+        // 修改Bin数据
+        async function modifyBin(newData) {
+            const url = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY,
+                        // 如果需要访问密钥：
+                        // 'X-Access-Key': '你的访问密钥',
+                    },
+                    body: JSON.stringify(newData)  // 将新的JSON数据作为请求体发送
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('modifyResult').innerText = '数据已成功修改: ' + JSON.stringify(result, null, 2);
+                } else {
+                    const errorResult = await response.json();
+                    throw new Error(`错误: ${response.status}, 信息: ${errorResult.message}`);
+                }
+            } catch (error) {
+                document.getElementById('modifyResult').innerText = '修改Bin时出错: ' + error.message;
+            }
+        }
+
+        // 处理用户提交的数据并调用修改方法
+        function handleModify() {
+            const newData = {
+                // 这里填写你要更新的JSON数据
+                message: document.getElementById('newMessage').value
+            };
+            modifyBin(newData);
+        }
+    </script>
+</head>
+<body>
+    <h1>读取和修改 JSONBin 数据</h1>
+
+    <!-- 读取部分 -->
+    <button onclick="readLatestBin()">读取最新版本的Bin</button>
+    <br><br>
+    <pre id="result"></pre>
+
+    <!-- 修改部分 -->
+    <h2>修改 JSONBin 数据</h2>
+    <textarea id="newMessage" rows="4" cols="50" placeholder="输入新的JSON数据"></textarea>
+    <br><br>
+    <button onclick="handleModify()">提交修改</button>
+    <br><br>
+    <pre id="modifyResult"></pre>
+</body>
+</html>
